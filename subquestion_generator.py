@@ -46,7 +46,7 @@ class SubQuestionsList(OpenAISchema):
     subquestions: List[SubQuestion] = Field(None, description="A list of subquestions - each item in the list contains a question, a function, and a data source")
 
 
-class SubQuestionsGenerator:
+class SubQuestionGenerator:
     """Generates a list of subquestions from a user question.
     """
     def __init__(self, data_sources: List[str] = None, functions: List[str] = None):
@@ -64,7 +64,7 @@ class SubQuestionsGenerator:
 
         user_prompt = f"{user_task}\n Here is the user question: {question}"
 
-        response = llm_call(model="gpt-35-turbo",
+        response = llm_call(model="gpt-4-0613",
                             function_schema=[SubQuestionsList.openai_schema],
                             output_schema={"name": SubQuestionsList.openai_schema["name"]},
                             system_prompt=system_prompt,

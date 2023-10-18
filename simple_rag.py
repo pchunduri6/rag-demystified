@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from subquestion_generator import SubQuestionsGenerator
+from subquestion_generator import SubQuestionGenerator
 import evadb
 
 if not load_dotenv():
@@ -11,9 +11,9 @@ if not load_dotenv():
 
 if __name__ == "__main__":
 
-    subquestion_generator = SubQuestionsGenerator()
+    subquestion_generator = SubQuestionGenerator()
 
-    question = "What is the population of Chicago?"
+    question = "Which city has the highest population?"
 
     user_task = """We have a database of wikipedia articles about several cities.
                  We are building an application to answer questions about the cities."""
