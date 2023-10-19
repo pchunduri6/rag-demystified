@@ -5,3 +5,5 @@ data/
 **/__pycache__/
 
 .env
+evadb_data/
+**/data_*
