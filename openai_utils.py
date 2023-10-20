@@ -22,7 +22,7 @@ OPENAI_MODEL_CONTEXT_LENGTH = {
 def llm_call(model,
              function_schema=None,
              output_schema=None,
-             system_prompt="You are a helpful AI assistant.",
+             system_prompt="You are an AI assistant that answers user questions using the context provided.",
              user_prompt="Please help me answer the following question:"):
 
     kwargs = {}

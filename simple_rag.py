@@ -19,9 +19,8 @@ if not load_dotenv():
 
 
 def generate_vector_stores(cursor, docs):
-    """Generate a vector store for the docs using haystack.
+    """Generate a vector store for the docs using evadb.
     """
-    # Insert text chunk by chunk.
     for doc in docs:
         print(f"Creating vector store for {doc}...")
         cursor.query(f"DROP TABLE IF EXISTS {doc};").df()
@@ -55,7 +54,14 @@ def vector_retrieval(cursor, llm_model, question, doc_name):
     for i in range(len(res_batch)):
         context_list.append(res_batch["data"][i])
     context = "\n".join(context_list)
-    user_prompt = "Here is some context: " + context + "\n Use only the context to answer the question: " + question
+    user_prompt = f"""You are an assistant for question-answering tasks.
+                Use the following pieces of retrieved context to answer the question.
+                If you don't know the answer, just say that you don't know.
+                Use three sentences maximum and keep the answer concise.
+                Question: {question}
+                Context: {context}
+                Answer:"""
+
     response = llm_call(model=llm_model, user_prompt=user_prompt)
 
     answer = response["choices"][0]["message"]["content"]
@@ -67,7 +73,10 @@ def llm_retrieval(llm_model, question, doc):
     """
     # context_length = OPENAI_MODEL_CONTEXT_LENGTH[llm_model]
     # total_tokens = get_num_tokens_simple(llm_model, wiki_docs[doc])
-    user_prompt = "Here is some context: " + doc + "\n Use only the context to answer the question: " + question
+    user_prompt = f"""Here is some context: {doc}
+                Use only the provided context to answer the question.
+                Here is the question: {question}"""
+
     response = llm_call(model=llm_model, user_prompt=user_prompt)
     answer = response["choices"][0]["message"]["content"]
     return answer
@@ -78,14 +87,19 @@ def response_aggregator(llm_model, question, responses):
     """Aggregates the responses from the subquestions to generate the final response.
     """
     print("-------> ⭐ Aggregating responses...")
-    system_prompt = """You are an AI agent that takes a user question and a set of responses from subquestions.
-                     Your goal is to aggregate the responses to generate a final response that answers the user question."""
+    system_prompt = """You are an assistant for question-answering tasks.
+                Use the following pieces of retrieved context to answer the question.
+                If you don't know the answer, just say that you don't know.
+                Use three sentences maximum and keep the answer concise."""
 
-    user_prompt = f"""Here is the user question: {question}
-                    Here are the responses from the subquestions:"""
+    context = ""
     for i, response in enumerate(responses):
-        user_prompt += f"\n Response {i+1}: {response}"
-    user_prompt += "\n Your final response:"
+        context += f"\n{response}"
+
+    user_prompt = f"""Question: {question}
+                      Context: {context}
+                      Answer:"""
+
     response = llm_call(model=llm_model, system_prompt=system_prompt, user_prompt=user_prompt)
     answer = response["choices"][0]["message"]["content"]
     return answer
@@ -131,9 +145,9 @@ if __name__ == "__main__":
     cursor = evadb.connect().cursor()
     print("✅ Connected to EvaDB...")
 
-    wiki_docs = load_wiki_pages(
-        page_titles=["Toronto", "Chicago", "Houston", "Boston", "Atlanta"]
-    )
+    doc_names = ["Toronto", "Chicago", "Houston", "Boston", "Atlanta", "Miami", "Seattle", "Dallas", "Denver", "Philadelphia"]
+    wiki_docs = load_wiki_pages(page_titles=doc_names)
+
     question = "Which city has the highest population?"
 
     user_task = """We have a database of wikipedia articles about several cities.
@@ -141,28 +155,35 @@ if __name__ == "__main__":
 
     vector_stores = generate_vector_stores(cursor, wiki_docs)
 
-    print(f"\n 🤔 User question: {question}")
-
     llm_model = "gpt-35-turbo"
     subquestion_generator = SubQuestionGenerator()
-    print(f"🧠 Generating subquestions...")
-    subquestions_bundle_list = subquestion_generator.generate_subquestions(question, user_task, llm_model=llm_model)
 
-    responses = []
-    for item in subquestions_bundle_list:
-        subquestion = item.question
-        selected_func = item.function.value
-        selected_doc = item.data_source.value
-        print(f"\n-------> 🤔 Processing subquestion: {subquestion} | function: {selected_func} | data source: {selected_doc}")
-        if selected_func == "vector_retrieval":
-            response = vector_retrieval(cursor, llm_model, subquestion, selected_doc)
-        elif selected_func == "llm_retrieval":
-            response = llm_retrieval(llm_model, subquestion, wiki_docs[selected_doc])
-        else:
-            print(f"\nCould not process subquestion: {subquestion} function: {selected_func} data source: {selected_doc}\n")
-            exit(0)
-        print(f"✅ Response: {response}")
-        responses.append(response)
+    while True:
+        # Get question from user
+        question = str(input("Question (enter 'exit' to exit): "))
+        if question.lower() == "exit":
+            break
+        print(f"🧠 Generating subquestions...")
+        subquestions_bundle_list = subquestion_generator.generate_subquestions(question=question,
+                                                                               data_sources=doc_names,
+                                                                               user_task=user_task,
+                                                                               llm_model=llm_model)
 
-    aggregated_response = response_aggregator(llm_model, question, responses)
-    print(f"\n✅ Final response: {aggregated_response}")
+        responses = []
+        for q_no, item in enumerate(subquestions_bundle_list):
+            subquestion = item.question
+            selected_func = item.function.value
+            selected_doc = item.data_source.value
+            print(f"\n-------> 🤔 Processing subquestion #{q_no+1}: {subquestion} | function: {selected_func} | data source: {selected_doc}")
+            if selected_func == "vector_retrieval":
+                response = vector_retrieval(cursor, llm_model, subquestion, selected_doc)
+            elif selected_func == "llm_retrieval":
+                response = llm_retrieval(llm_model, subquestion, wiki_docs[selected_doc])
+            else:
+                print(f"\nCould not process subquestion: {subquestion} function: {selected_func} data source: {selected_doc}\n")
+                exit(0)
+            print(f"✅ Response #{q_no+1}: {response}")
+            responses.append(response)
+
+        aggregated_response = response_aggregator(llm_model, question, responses)
+        print(f"\n✅ Final response: {aggregated_response}")
