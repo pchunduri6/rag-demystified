@@ -6,7 +6,7 @@ import requests
 import warnings
 warnings.filterwarnings("ignore")
 
-from subquestion_generator import SubQuestionGenerator
+from subquestion_generator import generate_subquestions
 import evadb
 from openai_utils import llm_call
 
@@ -156,7 +156,6 @@ if __name__ == "__main__":
     vector_stores = generate_vector_stores(cursor, wiki_docs)
 
     llm_model = "gpt-35-turbo"
-    subquestion_generator = SubQuestionGenerator()
     total_cost = 0
     while True:
         question_cost = 0
@@ -164,11 +163,11 @@ if __name__ == "__main__":
         question = str(input("Question (enter 'exit' to exit): "))
         if question.lower() == "exit":
             break
-        print(f"🧠 Generating subquestions...")
-        subquestions_bundle_list, cost = subquestion_generator.generate_subquestions(question=question,
-                                                                               data_sources=doc_names,
-                                                                               user_task=user_task,
-                                                                               llm_model=llm_model)
+        print("🧠 Generating subquestions...")
+        subquestions_bundle_list, cost = generate_subquestions(question=question,
+                                                               data_sources=doc_names,
+                                                               user_task=user_task,
+                                                               llm_model=llm_model)
         question_cost += cost
         responses = []
         for q_no, item in enumerate(subquestions_bundle_list):
