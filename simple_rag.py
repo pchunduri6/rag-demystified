@@ -3,12 +3,12 @@ from dotenv import load_dotenv
 from pathlib import Path
 import requests
 
+import warnings
+warnings.filterwarnings("ignore")
+
 from subquestion_generator import SubQuestionGenerator
 import evadb
 from openai_utils import llm_call
-
-import warnings
-warnings.filterwarnings("ignore")
 
 
 if not load_dotenv():
@@ -62,10 +62,10 @@ def vector_retrieval(cursor, llm_model, question, doc_name):
                 Context: {context}
                 Answer:"""
 
-    response = llm_call(model=llm_model, user_prompt=user_prompt)
+    response, cost = llm_call(model=llm_model, user_prompt=user_prompt)
 
     answer = response["choices"][0]["message"]["content"]
-    return answer
+    return answer, cost
 
 
 def llm_retrieval(llm_model, question, doc):
@@ -77,9 +77,9 @@ def llm_retrieval(llm_model, question, doc):
                 Use only the provided context to answer the question.
                 Here is the question: {question}"""
 
-    response = llm_call(model=llm_model, user_prompt=user_prompt)
+    response, cost = llm_call(model=llm_model, user_prompt=user_prompt)
     answer = response["choices"][0]["message"]["content"]
-    return answer
+    return answer, cost
     # load max of context_length tokens from the document
 
 
@@ -100,9 +100,9 @@ def response_aggregator(llm_model, question, responses):
                       Context: {context}
                       Answer:"""
 
-    response = llm_call(model=llm_model, system_prompt=system_prompt, user_prompt=user_prompt)
+    response, cost = llm_call(model=llm_model, system_prompt=system_prompt, user_prompt=user_prompt)
     answer = response["choices"][0]["message"]["content"]
-    return answer
+    return answer, cost
 
 
 def load_wiki_pages(page_titles=["Toronto", "Chicago", "Houston", "Boston", "Atlanta"]):
@@ -157,18 +157,19 @@ if __name__ == "__main__":
 
     llm_model = "gpt-35-turbo"
     subquestion_generator = SubQuestionGenerator()
-
+    total_cost = 0
     while True:
+        question_cost = 0
         # Get question from user
         question = str(input("Question (enter 'exit' to exit): "))
         if question.lower() == "exit":
             break
         print(f"🧠 Generating subquestions...")
-        subquestions_bundle_list = subquestion_generator.generate_subquestions(question=question,
+        subquestions_bundle_list, cost = subquestion_generator.generate_subquestions(question=question,
                                                                                data_sources=doc_names,
                                                                                user_task=user_task,
                                                                                llm_model=llm_model)
-
+        question_cost += cost
         responses = []
         for q_no, item in enumerate(subquestions_bundle_list):
             subquestion = item.question
@@ -176,14 +177,20 @@ if __name__ == "__main__":
             selected_doc = item.data_source.value
             print(f"\n-------> 🤔 Processing subquestion #{q_no+1}: {subquestion} | function: {selected_func} | data source: {selected_doc}")
             if selected_func == "vector_retrieval":
-                response = vector_retrieval(cursor, llm_model, subquestion, selected_doc)
+                response, cost = vector_retrieval(cursor, llm_model, subquestion, selected_doc)
             elif selected_func == "llm_retrieval":
-                response = llm_retrieval(llm_model, subquestion, wiki_docs[selected_doc])
+                response, cost = llm_retrieval(llm_model, subquestion, wiki_docs[selected_doc])
             else:
                 print(f"\nCould not process subquestion: {subquestion} function: {selected_func} data source: {selected_doc}\n")
                 exit(0)
             print(f"✅ Response #{q_no+1}: {response}")
             responses.append(response)
+            question_cost += cost
 
-        aggregated_response = response_aggregator(llm_model, question, responses)
+        aggregated_response, cost = response_aggregator(llm_model, question, responses)
+        question_cost += cost
         print(f"\n✅ Final response: {aggregated_response}")
+        print(f"🤑 Total cost for the question: ${question_cost:.4f}")
+        total_cost += question_cost
+
+    print(f"Total cost for all questions: ${total_cost:.4f}")

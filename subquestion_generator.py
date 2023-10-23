@@ -17,7 +17,11 @@ from openai_utils import llm_call, llm_call_cost
 #                  """
 
 DEFAULT_SUBQUESTION_GENERATOR_PROMPT = """
-You are an AI assistant that specializes in breaking down complex inquiries into simpler, manageable sub-questions. When presented with a complex user question, your role is to generate a list of sub-questions that, when answered, will comprehensively address the original query. You have at your disposal a pre-defined set of functions and data sources to utilize in answering each sub-question. If a user question is straightforward, your task is to return the original question, identifying the appropriate function and data source to use for its solution. Please remember that you are limited to the provided functions and data sources, and that each sub-question should be a full question that can be answered using a single function and a single data source.
+You are an AI assistant that specializes in breaking down complex inquiries into simpler, manageable sub-questions.
+When presented with a complex user question, your role is to generate a list of sub-questions that, when answered, will comprehensively address the original query.
+You have at your disposal a pre-defined set of functions and data sources to utilize in answering each sub-question.
+If a user question is straightforward, your task is to return the original question, identifying the appropriate function and data source to use for its solution.
+Please remember that you are limited to the provided functions and data sources, and that each sub-question should be a full question that can be answered using a single function and a single data source.
 """
 
 DEFAULT_USER_TASK = """
@@ -82,7 +86,7 @@ class SubQuestionGenerator:
 
         user_prompt = f"{user_task}\n Here is the user question: {question}"
 
-        response = llm_call(model=llm_model,
+        response, cost = llm_call(model=llm_model,
                             function_schema=[SubQuestionBundleList.openai_schema],
                             output_schema={"name": SubQuestionBundleList.openai_schema["name"]},
                             system_prompt=system_prompt,
@@ -92,4 +96,4 @@ class SubQuestionGenerator:
 
         subquestions_pydantic_obj = SubQuestionBundleList(**subquestions_list)
         subquestions_list = subquestions_pydantic_obj.subquestion_bundle_list
-        return subquestions_list
+        return subquestions_list, cost

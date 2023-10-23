@@ -19,6 +19,17 @@ OPENAI_MODEL_CONTEXT_LENGTH = {
     }
 
 
+def llm_call_cost(response):
+    """Returns the cost of the LLM call in dollars"""
+    model = response["model"]
+    usage = response["usage"]
+    prompt_cost = OPENAI_PRICING[model]["prompt"]
+    completion_cost = OPENAI_PRICING[model]["completion"]
+    prompt_token_cost = (usage["prompt_tokens"] * prompt_cost)/1000
+    completion_token_cost = (usage["completion_tokens"] * completion_cost)/1000
+    return prompt_token_cost + completion_token_cost
+
+
 def llm_call(model,
              function_schema=None,
              output_schema=None,
@@ -43,19 +54,9 @@ def llm_call(model,
         **kwargs
     )
     # print cost of call
-    print("🤑 LLM call cost: $", llm_call_cost(response))
-    return response
-
-
-def llm_call_cost(response):
-    """Returns the cost of the LLM call in dollars"""
-    model = response["model"]
-    usage = response["usage"]
-    prompt_cost = OPENAI_PRICING[model]["prompt"]
-    completion_cost = OPENAI_PRICING[model]["completion"]
-    prompt_token_cost = (usage["prompt_tokens"] * prompt_cost)/1000
-    completion_token_cost = (usage["completion_tokens"] * completion_cost)/1000
-    return "{:.4f}".format(prompt_token_cost + completion_token_cost)
+    call_cost = llm_call_cost(response)
+    print(f"🤑 LLM call cost: ${call_cost:.4f}")
+    return response, call_cost
 
 
 def get_num_tokens_simple(model, prompt):
