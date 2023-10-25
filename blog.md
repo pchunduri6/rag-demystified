@@ -68,12 +68,62 @@ More details on the full schema definition can be found [here](subquestion_gener
 
 Just using this prompt and the schema, the LLM returns the following output for the above questions:
 
-| Question                                                | Subquestions                                                                                                                                                                                        | Retrieval method | Data Source                                        |
+<table>
+<thead>
+  <tr>
+    <th>Question</th>
+    <th>Subquestions</th>
+    <th>Retrieval method</th>
+    <th>Data Source</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td rowspan=5>"What is the city with the highest number of tech companies?"</td>
+    <td>What are the tech companies in each city? ❌ </td>
+    <td>vector retrieval</td>
+    <td>Toronto</td>
+    </tr>
+    <tr>
+    <td>What are the tech companies in each city? ❌</td>
+    <td>vector retrieval</td>
+    <td>Chicago</td>
+    </tr>
+    <tr>
+    <td>What are the tech companies in each city? ❌</td>
+    <td>vector retrieval</td>
+    <td>Houston</td>
+    </tr>
+    <tr>
+    <td>What are the tech companies in each city? ❌</td>
+    <td>vector retrieval</td>
+    <td>Boston</td>
+    </tr>
+    <tr>
+    <td>What are the tech companies in each city? ❌</td>
+    <td>vector retrieval</td>
+    <td>Atlanta</td>
+    </tr>
+    <tr>
+    <td rowspan=2>Summarize the positive aspects of Atlanta and Toronto.</td>
+    <td>What are the positive aspects of Atlanta?</td>
+    <td>vector retrieval ❌</td>
+    <td>Atlanta</td>
+    </tr>
+    <tr>
+    <td>What are the positive aspects of Toronto?</td>
+    <td>vector retrieval ❌</td>
+    <td>Toronto</td>
+    </tr>
+</tbody>
+</table>
+
+<!-- | Question                                                | Subquestions                                                                                                                                                                                        | Retrieval method | Data Source                                        |
 |---------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|----------------------------------------------------|
 | "What are the sports teams in Chicago?"                 | "What are the sports teams in Chicago?"                                                                                                                                                             | vector retrieval | Chicago                                            |
 | "Give me a summary of the positive aspects of Atlanta." | "Give me a summary of the positive aspects of Atlanta."                                                                                                                                             | llm retrieval    | Atlanta                                            |
-| "What is the city with the highest population?"         | "What is the population of Toronto?"<br>"What is the population of Chicago?"<br>"What is the population of Houston?"<br>"What is the population of Boston?"<br>"What is the population of Atlanta?" | vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
-|                                                         |                                                                                                                                                                                                     |                  |                                                    |
+| "What is the city with the highest population?"         | "What is the population of Toronto?"<br>"What is the population of Chicago?"<br>"What is the population of Houston?"<br>"What is the population of Boston?"<br>"What is the population of Atlanta?" | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
+|                                                         |                                                                                                                                                                                                     |                  |                                                    | -->
 
 <!-- Not sure if we need these details - commenting out for now
 
@@ -161,7 +211,7 @@ Now that we've built a multi-hop question answering system, let's examine some o
 
 | Question                                                      | Subquestions                                                                                                                                                                                                                            | Retrieval method                                                                                 | Data Source                                        |
 |---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|----------------------------------------------------|
-| "What is the city with the highest number of<br /> tech companies?" | What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌ | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
+| "What is the city with the highest number of tech companies?" | What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌ | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
 | Summarize the positive aspects of Atlanta and Toronto.        | What are the positive aspects of Atlanta? <br>What are the positive aspects of Toronto?                                                                                                                                                 | vector retrieval ❌<br>vector retrieval ❌                                                         | Atlanta<br>Toronto                                 |
 
 
