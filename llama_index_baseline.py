@@ -131,26 +131,8 @@ if __name__ == "__main__":
             input_files=[f"data/{wiki_title}.txt"]
         ).load_data()
 
-    # setup base query engine as tool
-    # query_engine_tools = [
-    #     QueryEngineTool(
-    #         query_engine=query_engine_2021,
-    #         metadata=ToolMetadata(
-    #             name="tesla_2021_10k",
-    #             description="Provides information about Tesla financials for year 2021",
-    #         ),
-    #     ),
-    #     QueryEngineTool(
-    #         query_engine=query_engine_2020,
-    #         metadata=ToolMetadata(
-    #             name="tesla_2020_10k",
-    #             description="Provides information about Tesla financials for year 2020",
-    #         ),
-    #     ),
-    # ]
-
-    # Build agents dictionary
-    agents = {}
+    # # Build agents dictionary
+    # agents = {}
 
     query_engine_tools = []
     for wiki_title in wiki_titles:
@@ -210,10 +192,11 @@ if __name__ == "__main__":
         query_engine_tools=query_engine_tools,
         response_synthesizer=response_synthesizer,
         service_context=service_context,
-        use_async=True,
+        use_async=False,
         verbose=True,
     )
 
-    response = sub_query_engine.query(
-        "Can you compare the population of Toronto and Chicago?"
-    )
+    question = "Which are the sports teams in Toronto?"
+    print("Question: ", question)
+    response = sub_query_engine.query(question)
+    print_token_count(token_counter, embed_model_name)

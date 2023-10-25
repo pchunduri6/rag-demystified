@@ -145,7 +145,7 @@ if __name__ == "__main__":
     cursor = evadb.connect().cursor()
     print("✅ Connected to EvaDB...")
 
-    doc_names = ["Toronto", "Chicago", "Houston", "Boston", "Atlanta", "Miami", "Seattle", "Dallas", "Denver", "Philadelphia"]
+    doc_names = ["Toronto", "Chicago", "Houston", "Boston", "Atlanta"]
     wiki_docs = load_wiki_pages(page_titles=doc_names)
 
     question = "Which city has the highest population?"
