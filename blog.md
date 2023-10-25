@@ -272,8 +272,9 @@ This behavior is also observed in frameworks like LlamaIndex. In [our implementa
 ![llama_index_baseline](images/baseline.png)
 
 2. **Cost** - The second challenge is the cost dynamics of advanced RAG pipelines. The issue is two-fold:
-    - **Cost sensitivity** - The cost is dependent on the number of sub-queries generated, the retrieval method used, and the number of data sources queried. Since the LLMs are expensive to run, the cost increases with the number of sub-queries and the choice of retrieval method. For example, the incorrect model choice in the LlamaIndex baseline example above (`summary_tool`) results in a 3x higher cost compared to the `vector_tool` while also generating an incorrect response.
-    - **Cost transparency** - Advanced abstractions like the Sub-question query engine obfuscate the estimated cost of the query. While frameworks like LlamaIndex provide handy features like the callback manager, they are difficult for a beginner to set up and use.
+    - **Cost sensitivity** - The final cost of the query is dependent on the number of sub-queries generated, the retrieval method used, and the number of data sources queried. Since the LLMs are sensitive to the prompt, the cost of the query can vary significantly depending on the query and the LLM output.
+    . For example, the incorrect model choice in the LlamaIndex baseline example above (`summary_tool`) results in a 3x higher cost compared to the `vector_tool` while also generating an incorrect response.
+    - **Cost transparency** - Advanced abstractions in RAG frameworks like the sub-question query engine in LlamaIndex obfuscate the estimated cost of the query. While they provide handy features like the callback manager, they are difficult for a beginner to set up and use.
 
 3. **Context limits** - The final challenge is the context limits of the LLMs. Consider the scenario where the data warehouse contains thousands of data sources. In such cases, the LLM call used by the system will exceed the context limit while describing the available data sources. More sophisticated pipelines and prompt engineering are required to address this issue.
 
