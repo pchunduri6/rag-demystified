@@ -79,44 +79,46 @@ Just using this prompt and the schema, the LLM returns the following output for 
 </thead>
 <tbody>
   <tr>
-    <td rowspan=5>"What is the city with the highest number of tech companies?"</td>
-    <td>What are the tech companies in each city? ❌ </td>
-    <td>vector retrieval</td>
-    <td>Toronto</td>
-    </tr>
-    <tr>
-    <td>What are the tech companies in each city? ❌</td>
+    <td>"What is the population of Chicago?"</td>
+    <td>"What is the population of Chicago?"</td>
     <td>vector retrieval</td>
     <td>Chicago</td>
     </tr>
     <tr>
-    <td>What are the tech companies in each city? ❌</td>
+    <td>"Give me a summary of the positive aspects of Atlanta."</td>
+    <td>"Give me a summary of the positive aspects of Atlanta."</td>
+    <td>llm retrieval</td>
+    <td>Atlanta</td>
+    </tr>
+    <tr>
+    <td rowspan=5>"What is the city with the highest population?"</td>
+    <td>"What is the population of Toronto?"</td>
+    <td>vector retrieval</td>
+    <td>Toronto</td>
+    </tr>
+    <tr>
+    <td>"What is the population of Chicago?"</td>
+    <td>vector retrieval</td>
+    <td>Chicago</td>
+    </tr>
+    <tr>
+    <td>"What is the population of Houston?"</td>
     <td>vector retrieval</td>
     <td>Houston</td>
     </tr>
     <tr>
-    <td>What are the tech companies in each city? ❌</td>
+    <td>"What is the population of Boston?"</td>
     <td>vector retrieval</td>
     <td>Boston</td>
     </tr>
     <tr>
-    <td>What are the tech companies in each city? ❌</td>
+    <td>"What is the population of Atlanta?"</td>
     <td>vector retrieval</td>
     <td>Atlanta</td>
     </tr>
-    <tr>
-    <td rowspan=2>Summarize the positive aspects of Atlanta and Toronto.</td>
-    <td>What are the positive aspects of Atlanta?</td>
-    <td>vector retrieval ❌</td>
-    <td>Atlanta</td>
-    </tr>
-    <tr>
-    <td>What are the positive aspects of Toronto?</td>
-    <td>vector retrieval ❌</td>
-    <td>Toronto</td>
-    </tr>
 </tbody>
 </table>
+
 
 <!-- | Question                                                | Subquestions                                                                                                                                                                                        | Retrieval method | Data Source                                        |
 |---------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|----------------------------------------------------|
@@ -209,11 +211,61 @@ Now that we've built a multi-hop question answering system, let's examine some o
 
 1. **Prompt sensitivity** - The biggest challenge that we faced while building this system was prompt sensitivity. The LLMs are extremely sensitive to the prompt, and even a small change can result in sub-optimal results. For example, when changing the prompt from *"What is city with the highest population?"* to *"What is the city with the highest number of tech companies?"*, the system fails to generate the correct sub-queries as shown in the table below. Similarly, changing *"Give me a summary of the positive aspects of Atlanta."* to *"Summarize the positive aspects of Atlanta and Toronto."* results in using the wrong retrieval method for the sub-queries.
 
-| Question                                                      | Subquestions                                                                                                                                                                                                                            | Retrieval method                                                                                 | Data Source                                        |
+<table>
+<thead>
+  <tr>
+    <th>Question</th>
+    <th>Subquestions</th>
+    <th>Retrieval method</th>
+    <th>Data Source</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td rowspan=5>"What is the city with the highest number of tech companies?"</td>
+    <td>What are the tech companies in each city? ❌ </td>
+    <td>vector retrieval</td>
+    <td>Toronto</td>
+    </tr>
+    <tr>
+    <td>What are the tech companies in each city? ❌</td>
+    <td>vector retrieval</td>
+    <td>Chicago</td>
+    </tr>
+    <tr>
+    <td>What are the tech companies in each city? ❌</td>
+    <td>vector retrieval</td>
+    <td>Houston</td>
+    </tr>
+    <tr>
+    <td>What are the tech companies in each city? ❌</td>
+    <td>vector retrieval</td>
+    <td>Boston</td>
+    </tr>
+    <tr>
+    <td>What are the tech companies in each city? ❌</td>
+    <td>vector retrieval</td>
+    <td>Atlanta</td>
+    </tr>
+    <tr>
+    <td rowspan=2>Summarize the positive aspects of Atlanta and Toronto.</td>
+    <td>What are the positive aspects of Atlanta?</td>
+    <td>vector retrieval ❌</td>
+    <td>Atlanta</td>
+    </tr>
+    <tr>
+    <td>What are the positive aspects of Toronto?</td>
+    <td>vector retrieval ❌</td>
+    <td>Toronto</td>
+    </tr>
+</tbody>
+</table>
+
+<!-- | Question                                                      | Subquestions                                                                                                                                                                                                                            | Retrieval method                                                                                 | Data Source                                        |
 |---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|----------------------------------------------------|
 | "What is the city with the highest number of tech companies?" | What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌ | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
 | Summarize the positive aspects of Atlanta and Toronto.        | What are the positive aspects of Atlanta? <br>What are the positive aspects of Toronto?                                                                                                                                                 | vector retrieval ❌<br>vector retrieval ❌                                                         | Atlanta<br>Toronto                                 |
-
+ -->
 
 This behavior is also observed in frameworks like LlamaIndex. In [our implementation](llama_index_baseline.py) of the same example using LlamaIndex Sub-question query engine, the system often generates the wrong sub-queries and also uses the wrong retrieval method for the sub-queries, as shown below.
 
