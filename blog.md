@@ -46,6 +46,8 @@ As you can see, the questions can be simple retrieval/summarization questions ov
 
 ### Sub-query Generation
 
+![subquery_generation](images/end-to-end-query-engine.png)
+
 The first and the most important step to building a system that can answer all the above questions is generating sub-queries. The task is to break down the user question into a set of sub-queries such that each sub-query is fully answerable by a *single* data source from the data warehouse. Additionally, we need to know which response method to use for each sub-query (i.e. retrieval or summarization).
 
 At first glance, this sub-query generation logic in frameworks like LlamaIndex seems complex. But under the hood, it's powered by a single LLM prompt. We call this the **Sub-query Generation** LLM prompt.
@@ -201,7 +203,10 @@ Unsurprisingly, this is also powered by a single LLM prompt. Even better, the **
 
 ### Putting it all together
 
-After unraveling the layers of abstraction, we uncovered the magical secret ingredient powering the sub-question query engine - just two LLM prompts! One for sub-query generation, the other for retrieval, summarization and aggregation. Here is an example of the full pipeline in action:
+After unraveling the layers of abstraction, we uncovered the magical secret ingredient powering the sub-question query engine - just two LLM prompts! One for sub-query generation, the other for retrieval, summarization and aggregation.
+
+![call_types_table](images/call_types_table.png)
+Here is an example of the full pipeline in action:
 
 ![full_pipeline](images/simple_rag.png)
 
