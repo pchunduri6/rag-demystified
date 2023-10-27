@@ -26,15 +26,13 @@ RAG provides two key advantages over traditional LLM-based question answering:
 
 To enable answering more complex questions, recent AI frameworks like LlamaIndex have introduced more advanced abstractions such as the [Sub-question Query Engine](https://gpt-index.readthedocs.io/en/latest/examples/query_engine/sub_question_query_engine.html).
 
-In this post, we'll demystify sophisticated RAG pipelines by building a multi-hop question answering system from the ground up.
+In this post, we'll demystify sophisticated RAG pipelines by using the Sub-question Query Engine as an example. We'll examine the inner workings of the Sub-question Query Engine and simplify the abstractions to their core components. We'll also identify some of the challenges associated with advanced RAG pipelines.
 
-**Disclaimer**: We use an off-the-shelf vector index from [EvaDB](https://github.com/georgia-tech-db/evadb) for vector retrieval. However, the concepts are applicable to any vector index.
+### The setup
 
-### The Data Warehouse
+A data warehouse is a collection of data sources (e.g. databases, APIs, etc.) that contain information relevant to the question answering task.
 
-The first step in building a RAG pipeline is to create a data warehouse. A data warehouse is a collection of data sources (e.g. databases, APIs, etc.) that contain information relevant to the question answering task.
-
-In this example, we'll use a simple data warehouse containing multiple Wikipedia articles for different popular cities, inspired by LlamaIndex [example use-cases](https://docs.llamaindex.ai/en/stable/examples/index_structs/doc_summary/DocSummary.html). Each Wikipedia article is a separate data source.
+In this example, we'll use a simple data warehouse containing multiple Wikipedia articles for different popular cities, inspired by LlamaIndex [example use-cases](https://docs.llamaindex.ai/en/stable/examples/index_structs/doc_summary/DocSummary.html). Each city's wiki is a separate data source.
 
 Our goal is to build a system that can answer questions like:
 1. *"What is the population of Chicago?"*
@@ -43,20 +41,48 @@ Our goal is to build a system that can answer questions like:
 
 As you can see, the questions can be simple retrieval/summarization questions over a single data source (Q1/Q2) or complex retrieval/summarization questions over multiple data sources (Q3).
 
+We have the following *retrieval methods* at our disposal:
+
+1. **vector retrieval** - Given a question and a data source, generate an LLM response using the top-K most similar data chunks to the question from the data source as the context. We use the off-the-shelf FAISS vector index from [EvaDB](https://github.com/georgia-tech-db/evadb) for vector retrieval. However, the concepts are applicable to any vector index.
+
+2. **summary retrieval** - Given a summary question and a data source, generate an LLM response using the entire data source as context.
+
+### The core principle
+
+The core principle behind any advanced RAG pipelines is that each component is powered by a single LLM call. The entire pipeline is a series of LLM calls with carefully crafted prompts. These prompts are the secret sauce that enable advanced RAG pipelines to perform complex tasks.
+
+In fact, any advanced RAG pipeline can be broken down into a series of individual LLM calls that follow a universal input pattern:
+
+![equation](images/equation.png)
+
+<!-- LLM input = **Prompt Template** + **Context** + **Question** -->
+where:
+- **Prompt Template** - A curated prompt template for the specific task (e.g. sub-question generation, summarization, etc.)
+- **Context** - The context to use to perform the task (e.g. data source, top-K most similar data chunks, etc.)
+- **Question** - The question to answer
+
+Now, let's verify this principle by examining the inner workings of the Sub-question Query Engine.
+
 
 ### Sub-query Generation
 
-![subquery_generation](images/end-to-end-query-engine.png)
+The goal of the sub-question query engine is to take a complex question and break it down into a set of sub-questions that can be answered by a single data source and a retrieval method. For example, the question *"What is the city with the highest population?"* is broken down into five sub-questions, one for each city, of the form *"What is the population of {city}?".*
+<!-- ![subquery_generation](images/end-to-end-query-engine.png) -->
 
-The first and the most important step to building a system that can answer all the above questions is generating sub-queries. The task is to break down the user question into a set of sub-queries such that each sub-query is fully answerable by a *single* data source from the data warehouse. Additionally, we need to know which response method to use for each sub-query (i.e. retrieval or summarization).
+<!-- The first and the most important step to building a system that can answer all the above questions is generating sub-queries. The task is to break down the user question into a set of sub-queries such that each sub-query is fully answerable by a *single* data source from the data warehouse. Additionally, we need to know which response method to use for each sub-query (i.e. retrieval or summarization). -->
 
-At first glance, this sub-query generation logic in frameworks like LlamaIndex seems complex. But under the hood, it's powered by a single LLM prompt. We call this the **Sub-query Generation** LLM prompt.
+At first glance, this seems like a daunting task. Specifically, we need to answer the following questions:
+1. **How do we know which sub-queries to generate?**
+2. **How do we know which data source to use for each sub-query?**
+3. **How do we know which retrieval method to use for each sub-query?**
+
+Remarkably, the answer to all three questions is the same - a single LLM call! The entire sub-question query engine is powered by a single LLM call with a carefully crafted prompt template. Let's call this template the **Sub-question Prompt Template**.
 
 ```
--- Sub-query Generation LLM Prompt --
+-- Sub-question Prompt Template --
 
 """
-    You are an AI assistant that specializes in breaking down complex inquiries into simpler, manageable sub-questions.
+    You are an AI assistant that specializes in breaking down complex questions into simpler, manageable sub-questions.
     When presented with a complex user question, your role is to generate a list of sub-questions that, when answered, will comprehensively address the original query.
     You have at your disposal a pre-defined set of functions and data sources to utilize in answering each sub-question.
     If a user question is straightforward, your task is to return the original question, identifying the appropriate function and data source to use for its solution.
@@ -64,11 +90,14 @@ At first glance, this sub-query generation logic in frameworks like LlamaIndex s
 """
 ```
 
-To reliably generate the correct format of functions and data sources, we use the powerful [OpenAI function calling](https://openai.com/blog/function-calling-and-other-api-updates) feature paired with Pydantic models. We also use the [Instructor](https://github.com/jxnl/instructor) library to easily generate LLM-ready function schemas.
+The context for the LLM call is the names of the data sources and the functions available to the system. The question is the user question. The LLM outputs a list of sub-queries, each with a function and a data source.
 
-More details on the full schema definition can be found [here](subquestion_generator.py).
+<!-- 
+To reliably generate the correct format of functions and data sources, we use the powerful [OpenAI function calling](https://openai.com/blog/function-calling-and-other-api-updates) feature paired with Pydantic models. We also use the [Instructor](https://github.com/jxnl/instructor) library to easily generate LLM-ready function schemas. -->
 
-Just using this prompt and the schema, the LLM returns the following output for the above questions:
+<!-- More details on the full schema definition can be found [here](subquestion_generator.py). -->
+
+For the three example questions, the LLM returns the following output:
 
 <table>
 <thead>
@@ -122,67 +151,14 @@ Just using this prompt and the schema, the LLM returns the following output for 
 </table>
 
 
-<!-- | Question                                                | Subquestions                                                                                                                                                                                        | Retrieval method | Data Source                                        |
-|---------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|----------------------------------------------------|
-| "What are the sports teams in Chicago?"                 | "What are the sports teams in Chicago?"                                                                                                                                                             | vector retrieval | Chicago                                            |
-| "Give me a summary of the positive aspects of Atlanta." | "Give me a summary of the positive aspects of Atlanta."                                                                                                                                             | llm retrieval    | Atlanta                                            |
-| "What is the city with the highest population?"         | "What is the population of Toronto?"<br>"What is the population of Chicago?"<br>"What is the population of Houston?"<br>"What is the population of Boston?"<br>"What is the population of Atlanta?" | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
-|                                                         |                                                                                                                                                                                                     |                  |                                                    | -->
-
-<!-- Not sure if we need these details - commenting out for now
-
-For example, the function schema to choose vector/summarization retrieval is as simple as:
-
-```python
-class FunctionEnum(str, Enum):
-    """The function to use to answer the questions.
-    Use vector_retrieval for factoid questions.
-    Use llm_retrieval for summarization questions.
-    """
-    VECTOR_RETRIEVAL = "vector_retrieval"
-    LLM_RETRIEVAL = "llm_retrieval"
-```
-
-The data source schema definition is also straightforward:
-```python
-class DataSourceEnum(str, Enum):
-    """The data source to use to answer the corresponding subquestion"""
-    TORONTO = "Toronto"
-    CHICAGO = "Chicago"
-    HOUSTON = "Houston"
-    BOSTON = "Boston"
-    ATLANTA = "Atlanta"
-```
-
-All of this can be packaged into a simple Pydantic model:
-
-```python
-class QuestionBundle(BaseModel):
-    question: str = Field(None, description="The subquestion extracted from the user's question")
-    function: FunctionEnum
-    data_source: DataSourceEnum
-```
-
-Using the Instructor library, we can provide the above schema as the desired output format to OpenAI.
-```python
-from instructor import OpenAISchema
-
-class SubQuestionBundleList(OpenAISchema):
-    subquestion_bundle_list: List[QuestionBundle] = Field(None, description="A list of subquestions - each item in the list contains a question, a function, and a data source")
-
-response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        functions=[QuestionBundle.OpenAISchema],
-        ...
-)
-``` -->
-
 ### Vector/Summarization Retrieval
 
-Once we have the sub-queries, we can use them to retrieve the relevant information from the data warehouse. Depending on the LLM's response, we use either vector retrieval or summarization retrieval.
+<!-- Once we have the sub-queries, we can use them to retrieve the relevant information from the data warehouse. Depending on the LLM's response, we use either vector retrieval or summarization retrieval.
 
 For vector retrieval, we use the EvaDB vector index to find the top K most similar data chunks to the sub-query. We then use these data chunks as context for the LLM to generate a concise response.
-For summarization retrieval, we directly use the LLM against the data source as context to generate the summary.
+For summarization retrieval, we directly use the LLM against the data source as context to generate the summary. -->
+
+For each sub-query, we use the LLM to generate a response using the appropriate retrieval method. 
 This is the heart of the RAG pipeline, and we use the standard **RAGPrompt** from [LangchainHub](https://smith.langchain.com/hub) for this step.
 
 ```
@@ -194,6 +170,8 @@ Question: {question}
 Context: {context}
 Answer:
 ```
+
+**Disclaimer**: 
 
 ### Response Aggregation
 
@@ -266,11 +244,6 @@ Now that we've built a multi-hop question answering system, let's examine some o
 </tbody>
 </table>
 
-<!-- | Question                                                      | Subquestions                                                                                                                                                                                                                            | Retrieval method                                                                                 | Data Source                                        |
-|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|----------------------------------------------------|
-| "What is the city with the highest number of tech companies?" | What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌ | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
-| Summarize the positive aspects of Atlanta and Toronto.        | What are the positive aspects of Atlanta? <br>What are the positive aspects of Toronto?                                                                                                                                                 | vector retrieval ❌<br>vector retrieval ❌                                                         | Atlanta<br>Toronto                                 |
- -->
 
 This behavior is also observed in frameworks like LlamaIndex. In [our implementation](llama_index_baseline.py) of the same example using LlamaIndex Sub-question query engine, the system often generates the wrong sub-queries and also uses the wrong retrieval method for the sub-queries, as shown below.
 
@@ -279,10 +252,74 @@ This behavior is also observed in frameworks like LlamaIndex. In [our implementa
 2. **Cost** - The second challenge is the cost dynamics of advanced RAG pipelines. The issue is two-fold:
     - **Cost sensitivity** - The final cost of the query is dependent on the number of sub-queries generated, the retrieval method used, and the number of data sources queried. Since the LLMs are sensitive to the prompt, the cost of the query can vary significantly depending on the query and the LLM output.
     . For example, the incorrect model choice in the LlamaIndex baseline example above (`summary_tool`) results in a 3x higher cost compared to the `vector_tool` while also generating an incorrect response.
-    - **Cost transparency** - Advanced abstractions in RAG frameworks like the sub-question query engine in LlamaIndex obfuscate the estimated cost of the query. While they provide handy features like the callback manager, they are difficult for a beginner to set up and use.
+    - **Cost transparency** - Advanced abstractions in RAG frameworks like the sub-question query engine in LlamaIndex obscure the estimated cost of the query. While they provide handy features like the callback manager, they are difficult for a beginner to set up and use.
 
 3. **Context limits** - The final challenge is the context limits of the LLMs. Consider the scenario where the data warehouse contains thousands of data sources. In such cases, the LLM call used by the system will exceed the context limit while describing the available data sources. More sophisticated pipelines and prompt engineering are required to address this issue.
 
 ## Conclusion
 
 Advanced RAG pipelines are powerful tools for building end-to-end question answering systems. However, they are not without their challenges. In this post, we demystified the inner workings of advanced RAG pipelines and found that most advanced RAG abstractions boil down to a few LLM prompts. We also identified some of the challenges associated with advanced RAG pipelines such as prompt sensitivity, cost, and context limits. We hope that this post will help you build more robust and cost-effective RAG pipelines.
+
+
+
+<!-- | Question                                                      | Subquestions                                                                                                                                                                                                                            | Retrieval method                                                                                 | Data Source                                        |
+|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|----------------------------------------------------|
+| "What is the city with the highest number of tech companies?" | What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌ | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
+| Summarize the positive aspects of Atlanta and Toronto.        | What are the positive aspects of Atlanta? <br>What are the positive aspects of Toronto?                                                                                                                                                 | vector retrieval ❌<br>vector retrieval ❌                                                         | Atlanta<br>Toronto                                 |
+ -->
+
+
+<!-- | Question                                                | Subquestions                                                                                                                                                                                        | Retrieval method | Data Source                                        |
+|---------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|----------------------------------------------------|
+| "What are the sports teams in Chicago?"                 | "What are the sports teams in Chicago?"                                                                                                                                                             | vector retrieval | Chicago                                            |
+| "Give me a summary of the positive aspects of Atlanta." | "Give me a summary of the positive aspects of Atlanta."                                                                                                                                             | llm retrieval    | Atlanta                                            |
+| "What is the city with the highest population?"         | "What is the population of Toronto?"<br>"What is the population of Chicago?"<br>"What is the population of Houston?"<br>"What is the population of Boston?"<br>"What is the population of Atlanta?" | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
+|                                                         |                                                                                                                                                                                                     |                  |                                                    | -->
+
+<!-- Not sure if we need these details - commenting out for now
+
+For example, the function schema to choose vector/summarization retrieval is as simple as:
+
+```python
+class FunctionEnum(str, Enum):
+    """The function to use to answer the questions.
+    Use vector_retrieval for factoid questions.
+    Use llm_retrieval for summarization questions.
+    """
+    VECTOR_RETRIEVAL = "vector_retrieval"
+    LLM_RETRIEVAL = "llm_retrieval"
+```
+
+The data source schema definition is also straightforward:
+```python
+class DataSourceEnum(str, Enum):
+    """The data source to use to answer the corresponding subquestion"""
+    TORONTO = "Toronto"
+    CHICAGO = "Chicago"
+    HOUSTON = "Houston"
+    BOSTON = "Boston"
+    ATLANTA = "Atlanta"
+```
+
+All of this can be packaged into a simple Pydantic model:
+
+```python
+class QuestionBundle(BaseModel):
+    question: str = Field(None, description="The subquestion extracted from the user's question")
+    function: FunctionEnum
+    data_source: DataSourceEnum
+```
+
+Using the Instructor library, we can provide the above schema as the desired output format to OpenAI.
+```python
+from instructor import OpenAISchema
+
+class SubQuestionBundleList(OpenAISchema):
+    subquestion_bundle_list: List[QuestionBundle] = Field(None, description="A list of subquestions - each item in the list contains a question, a function, and a data source")
+
+response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        functions=[QuestionBundle.OpenAISchema],
+        ...
+)
+``` -->

@@ -17,7 +17,7 @@ from openai_utils import llm_call
 #                  """
 
 DEFAULT_SUBQUESTION_GENERATOR_PROMPT = """
-    You are an AI assistant that specializes in breaking down complex inquiries into simpler, manageable sub-questions.
+    You are an AI assistant that specializes in breaking down complex questions into simpler, manageable sub-questions.
     When presented with a complex user question, your role is to generate a list of sub-questions that, when answered, will comprehensively address the original query.
     You have at your disposal a pre-defined set of functions and data sources to utilize in answering each sub-question.
     If a user question is straightforward, your task is to return the original question, identifying the appropriate function and data source to use for its solution.
