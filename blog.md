@@ -30,9 +30,9 @@ In this post, we'll demystify sophisticated RAG pipelines by using the Sub-quest
 
 ### The setup
 
-A data warehouse is a collection of data sources (e.g. databases, APIs, etc.) that contain information relevant to the question answering task.
+A data warehouse is a collection of data sources (e.g., documents, tables etc.) that contain information relevant to the question answering task.
 
-In this example, we'll use a simple data warehouse containing multiple Wikipedia articles for different popular cities, inspired by LlamaIndex [example use-cases](https://docs.llamaindex.ai/en/stable/examples/index_structs/doc_summary/DocSummary.html). Each city's wiki is a separate data source.
+In this example, we'll use a simple data warehouse containing multiple Wikipedia articles for different popular cities, inspired by LlamaIndex [example use-cases](https://docs.llamaindex.ai/en/stable/examples/index_structs/doc_summary/DocSummary.html). Each city's wiki is a separate data source. Note that for simplicity, we limit each document's size to fit within the LLM context limit.
 
 Our goal is to build a system that can answer questions like:
 1. *"What is the population of Chicago?"*
@@ -47,9 +47,9 @@ We have the following *retrieval methods* at our disposal:
 
 2. **summary retrieval** - Given a summary question and a data source, generate an LLM response using the entire data source as context.
 
-### The core principle
+### The secret sauce
 
-The core principle behind any advanced RAG pipelines is that each component is powered by a single LLM call. The entire pipeline is a series of LLM calls with carefully crafted prompts. These prompts are the secret sauce that enable advanced RAG pipelines to perform complex tasks.
+Our key insight is that each component in an advanced RAG pipeline is powered by a single LLM call. The entire pipeline is a series of LLM calls with carefully crafted prompts. These prompts are the secret sauce that enable advanced RAG pipelines to perform complex tasks.
 
 In fact, any advanced RAG pipeline can be broken down into a series of individual LLM calls that follow a universal input pattern:
 
@@ -67,9 +67,6 @@ Now, let's verify this principle by examining the inner workings of the Sub-ques
 ### Sub-query Generation
 
 The goal of the sub-question query engine is to take a complex question and break it down into a set of sub-questions that can be answered by a single data source and a retrieval method. For example, the question *"What is the city with the highest population?"* is broken down into five sub-questions, one for each city, of the form *"What is the population of {city}?".*
-<!-- ![subquery_generation](images/end-to-end-query-engine.png) -->
-
-<!-- The first and the most important step to building a system that can answer all the above questions is generating sub-queries. The task is to break down the user question into a set of sub-queries such that each sub-query is fully answerable by a *single* data source from the data warehouse. Additionally, we need to know which response method to use for each sub-query (i.e. retrieval or summarization). -->
 
 At first glance, this seems like a daunting task. Specifically, we need to answer the following questions:
 1. **How do we know which sub-queries to generate?**
@@ -118,7 +115,7 @@ For the three example questions, the LLM returns the following output:
     <tr>
     <td>"Give me a summary of the positive aspects of Atlanta."</td>
     <td>"Give me a summary of the positive aspects of Atlanta."</td>
-    <td>llm retrieval</td>
+    <td>summary retrieval</td>
     <td>Atlanta</td>
     </tr>
     <tr>
@@ -158,11 +155,12 @@ For the three example questions, the LLM returns the following output:
 For vector retrieval, we use the EvaDB vector index to find the top K most similar data chunks to the sub-query. We then use these data chunks as context for the LLM to generate a concise response.
 For summarization retrieval, we directly use the LLM against the data source as context to generate the summary. -->
 
-For each sub-query, we use the LLM to generate a response using the appropriate retrieval method. 
-This is the heart of the RAG pipeline, and we use the standard **RAGPrompt** from [LangchainHub](https://smith.langchain.com/hub) for this step.
+For each sub-query, we use the chosen retrieval method over the corresponding data source to retrieve the relevant information. For example, for the sub-query *"What is the population of Chicago?"*, we use vector retrieval over the Chicago data source. Similarly, for the sub-query *"Give me a summary of the positive aspects of Atlanta."*, we use summarization retrieval over the Atlanta data source.
+
+For both retrieval methods, we use the same LLM prompt template. In fact, we find that the popular **RAG Prompt** from [LangchainHub](https://smith.langchain.com/hub) works great out-of-the-box for this step.
 
 ```
--- RAGPrompt --
+-- RAG Prompt Template --
 
 """
 You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
@@ -171,110 +169,53 @@ Context: {context}
 Answer:
 ```
 
-**Disclaimer**: 
+Both the retrieval methods only differ in the context used for the LLM call. For vector retrieval, we use the top K most similar data chunks to the sub-query as context. For summarization retrieval, we use the entire data source as context.
+
 
 ### Response Aggregation
 
 This is the final step that aggregates the responses from the sub-queries into a final response. For example, for the question *"What is the city with the highest population?"*, the sub-queries  retrieve the population of each city and then response aggregation finds and returns the city with the highest population.
-Unsurprisingly, this is also powered by a single LLM prompt. Even better, the **RAGPrompt** from the previous step works great out-of-the-box for this step as well.
+The **RAG Prompt** works great for this step as well.
+
+The context for the LLM call is the list of responses from the sub-queries. The question is the original user question and the LLM outputs a final response.
 
 
 ### Putting it all together
 
-After unraveling the layers of abstraction, we uncovered the magical secret ingredient powering the sub-question query engine - just two LLM prompts! One for sub-query generation, the other for retrieval, summarization and aggregation.
+After unraveling the layers of abstraction, we uncovered the secret ingredient powering the sub-question query engine - 4 types of LLM calls with varying prompts and contexts. The table below summarizes the LLM calls used in the pipeline.
 
 ![call_types_table](images/call_types_table.png)
-Here is an example of the full pipeline in action:
+
+Here is an example of the full pipeline in action for the question *"Which city with the highest population?"*.
 
 ![full_pipeline](images/simple_rag.png)
 
 ## Challenges
 
-Now that we've built a multi-hop question answering system, let's examine some of the challenges associated with such systems.
+Now that we've demystified the inner workings of advanced RAG pipelines, let's examine some of the challenges associated with them.
 
-1. **Prompt sensitivity** - The biggest challenge that we faced while building this system was prompt sensitivity. The LLMs are extremely sensitive to the prompt, and even a small change can result in sub-optimal results. For example, when changing the prompt from *"What is city with the highest population?"* to *"What is the city with the highest number of tech companies?"*, the system fails to generate the correct sub-queries as shown in the table below. Similarly, changing *"Give me a summary of the positive aspects of Atlanta."* to *"Summarize the positive aspects of Atlanta and Toronto."* results in using the wrong retrieval method for the sub-queries.
+1. **Query sensitivity** - The biggest challenge that we observed with these systems is the query sensitivity. The LLMs are extremely sensitive to the user question, and the pipeline fails unexpectedly for several user questions. Here are a few example failure cases that we encountered:
+    - **Incorrect sub-queries** - The LLM sometimes generates incorrect sub-queries. For example, *"Which city has the highest number of tech companies?"* is broken down into *"What are the tech companies in each city?"* 5 times (once for each city) instead of *"What is the number of tech companies in Toronto?"*, *"What is the number of tech companies in Chicago?"*, etc.
+    - **Incorrect retrieval method** - *"Summarize the positive aspects of Atlanta and Toronto."* results in using the vector retrieval method instead of the summarization retrieval method.
 
-<table>
-<thead>
-  <tr>
-    <th>Question</th>
-    <th>Subquestions</th>
-    <th>Retrieval method</th>
-    <th>Data Source</th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td rowspan=5>"What is the city with the highest number of tech companies?"</td>
-    <td>What are the tech companies in each city? ❌ </td>
-    <td>vector retrieval</td>
-    <td>Toronto</td>
-    </tr>
-    <tr>
-    <td>What are the tech companies in each city? ❌</td>
-    <td>vector retrieval</td>
-    <td>Chicago</td>
-    </tr>
-    <tr>
-    <td>What are the tech companies in each city? ❌</td>
-    <td>vector retrieval</td>
-    <td>Houston</td>
-    </tr>
-    <tr>
-    <td>What are the tech companies in each city? ❌</td>
-    <td>vector retrieval</td>
-    <td>Boston</td>
-    </tr>
-    <tr>
-    <td>What are the tech companies in each city? ❌</td>
-    <td>vector retrieval</td>
-    <td>Atlanta</td>
-    </tr>
-    <tr>
-    <td rowspan=2>Summarize the positive aspects of Atlanta and Toronto.</td>
-    <td>What are the positive aspects of Atlanta?</td>
-    <td>vector retrieval ❌</td>
-    <td>Atlanta</td>
-    </tr>
-    <tr>
-    <td>What are the positive aspects of Toronto?</td>
-    <td>vector retrieval ❌</td>
-    <td>Toronto</td>
-    </tr>
-</tbody>
-</table>
+We had to put in significant effort into prompt engineering to get the pipeline to work for each question. This is a significant challenge for building robust systems.
 
-
-This behavior is also observed in frameworks like LlamaIndex. In [our implementation](llama_index_baseline.py) of the same example using LlamaIndex Sub-question query engine, the system often generates the wrong sub-queries and also uses the wrong retrieval method for the sub-queries, as shown below.
+To verify this behavior, we [implemented the example](llama_index_baseline.py) using the LlamaIndex Sub-question query engine. Consistent with our observations, the system often generates the wrong sub-queries and also uses the wrong retrieval method for the sub-queries, as shown below.
 
 ![llama_index_baseline](images/baseline.png)
+
 
 2. **Cost** - The second challenge is the cost dynamics of advanced RAG pipelines. The issue is two-fold:
     - **Cost sensitivity** - The final cost of the query is dependent on the number of sub-queries generated, the retrieval method used, and the number of data sources queried. Since the LLMs are sensitive to the prompt, the cost of the query can vary significantly depending on the query and the LLM output.
     . For example, the incorrect model choice in the LlamaIndex baseline example above (`summary_tool`) results in a 3x higher cost compared to the `vector_tool` while also generating an incorrect response.
-    - **Cost transparency** - Advanced abstractions in RAG frameworks like the sub-question query engine in LlamaIndex obscure the estimated cost of the query. While they provide handy features like the callback manager, they are difficult for a beginner to set up and use.
+    - **Cost estimation** - Advanced abstractions in RAG frameworks obscure the estimated cost of the query. Setting up a cost monitoring system is challenging since the cost of the query is dependent on the LLM output.
 
-3. **Context limits** - The final challenge is the context limits of the LLMs. Consider the scenario where the data warehouse contains thousands of data sources. In such cases, the LLM call used by the system will exceed the context limit while describing the available data sources. More sophisticated pipelines and prompt engineering are required to address this issue.
 
 ## Conclusion
 
 Advanced RAG pipelines are powerful tools for building end-to-end question answering systems. However, they are not without their challenges. In this post, we demystified the inner workings of advanced RAG pipelines and found that most advanced RAG abstractions boil down to a few LLM prompts. We also identified some of the challenges associated with advanced RAG pipelines such as prompt sensitivity, cost, and context limits. We hope that this post will help you build more robust and cost-effective RAG pipelines.
 
 
-
-<!-- | Question                                                      | Subquestions                                                                                                                                                                                                                            | Retrieval method                                                                                 | Data Source                                        |
-|---------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|----------------------------------------------------|
-| "What is the city with the highest number of tech companies?" | What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌<br>What are the tech companies in each city? ❌ | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
-| Summarize the positive aspects of Atlanta and Toronto.        | What are the positive aspects of Atlanta? <br>What are the positive aspects of Toronto?                                                                                                                                                 | vector retrieval ❌<br>vector retrieval ❌                                                         | Atlanta<br>Toronto                                 |
- -->
-
-
-<!-- | Question                                                | Subquestions                                                                                                                                                                                        | Retrieval method | Data Source                                        |
-|---------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|----------------------------------------------------|
-| "What are the sports teams in Chicago?"                 | "What are the sports teams in Chicago?"                                                                                                                                                             | vector retrieval | Chicago                                            |
-| "Give me a summary of the positive aspects of Atlanta." | "Give me a summary of the positive aspects of Atlanta."                                                                                                                                             | llm retrieval    | Atlanta                                            |
-| "What is the city with the highest population?"         | "What is the population of Toronto?"<br>"What is the population of Chicago?"<br>"What is the population of Houston?"<br>"What is the population of Boston?"<br>"What is the population of Atlanta?" | vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval<br>vector retrieval | Toronto<br>Chicago<br>Houston<br>Boston<br>Atlanta |
-|                                                         |                                                                                                                                                                                                     |                  |                                                    | -->
 
 <!-- Not sure if we need these details - commenting out for now
 
@@ -284,10 +225,10 @@ For example, the function schema to choose vector/summarization retrieval is as 
 class FunctionEnum(str, Enum):
     """The function to use to answer the questions.
     Use vector_retrieval for factoid questions.
-    Use llm_retrieval for summarization questions.
+    Use summary_retrieval for summarization questions.
     """
     VECTOR_RETRIEVAL = "vector_retrieval"
-    LLM_RETRIEVAL = "llm_retrieval"
+    SUMMARY_RETRIEVAL = "summary_retrieval"
 ```
 
 The data source schema definition is also straightforward:

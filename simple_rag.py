@@ -68,8 +68,8 @@ def vector_retrieval(cursor, llm_model, question, doc_name):
     return answer, cost
 
 
-def llm_retrieval(llm_model, question, doc):
-    """Returns the answer to a summarization question over the document using LLM retrieval.
+def summary_retrieval(llm_model, question, doc):
+    """Returns the answer to a summarization question over the document using summary retrieval.
     """
     # context_length = OPENAI_MODEL_CONTEXT_LENGTH[llm_model]
     # total_tokens = get_num_tokens_simple(llm_model, wiki_docs[doc])
@@ -178,7 +178,7 @@ if __name__ == "__main__":
             if selected_func == "vector_retrieval":
                 response, cost = vector_retrieval(cursor, llm_model, subquestion, selected_doc)
             elif selected_func == "llm_retrieval":
-                response, cost = llm_retrieval(llm_model, subquestion, wiki_docs[selected_doc])
+                response, cost = summary_retrieval(llm_model, subquestion, wiki_docs[selected_doc])
             else:
                 print(f"\nCould not process subquestion: {subquestion} function: {selected_func} data source: {selected_doc}\n")
                 exit(0)

@@ -24,15 +24,13 @@ DEFAULT_SUBQUESTION_GENERATOR_PROMPT = """
     Please remember that you are limited to the provided functions and data sources, and that each sub-question should be a full question that can be answered using a single function and a single data source.
 """
 
-DEFAULT_USER_TASK = """
-                Please generate a list of subquestions to answer the user's question.
-                """
+DEFAULT_USER_TASK = ""
 
 
 class FunctionEnum(str, Enum):
     """The function to use to answer the questions.
-    Use vector_retrieval for factoid questions.
-    Use llm_retrieval for summarization questions.
+    Use vector_retrieval for fact-based questions such as demographics, sports, arts and culture, etc.
+    Use llm_retrieval for summarization questions, such as positive aspects, history, etc.
     """
     VECTOR_RETRIEVAL = "vector_retrieval"
     LLM_RETRIEVAL = "llm_retrieval"
