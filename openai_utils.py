@@ -43,7 +43,7 @@ def llm_call(model,
         kwargs["function_call"] = output_schema
 
     response = openai.ChatCompletion.create(
-        engine=model,
+        model=model,
         temperature=0,
         messages=[
             {"role": "system",
