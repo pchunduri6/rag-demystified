@@ -60,10 +60,16 @@ where:
 
 Now, let's verify this principle by examining the inner workings of the Sub-question Query Engine.
 
+The Sub-question Query Engine has to perform three tasks:
+1. **Sub-query generation** - Given a complex question, break it down into a set of sub-questions, while identifying the appropriate data source and retrieval method for each sub-question.
+2. **Vector/Summarization Retrieval** - For each sub-query, use the chosen retrieval method over the corresponding data source to retrieve the relevant information.
+3. **Response Aggregation** - Aggregate the responses from the sub-queries into a final response.
+
+Let's examine each task in detail.
 
 ### Sub-query Generation
 
-The goal of the sub-question query engine is to take a complex question and break it down into a set of sub-questions that can be answered by a single data source and a retrieval method. For example, the question *"Which city has the highest population?"* is broken down into five sub-questions, one for each city, of the form *"What is the population of {city}?".*
+Our goal is to break down a complex question into a set of sub-questions, while identifying the appropriate data source and retrieval method for each sub-question. For example, the question *"Which city has the highest population?"* is broken down into five sub-questions, one for each city, of the form *"What is the population of {city}?".* The data source for each sub-question has to be the corresponding city's wiki, and the retrieval method has to be vector retrieval.
 
 At first glance, this seems like a daunting task. Specifically, we need to answer the following questions:
 1. **How do we know which sub-queries to generate?**
