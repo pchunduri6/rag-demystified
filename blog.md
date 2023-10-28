@@ -36,7 +36,7 @@ Our goal is to build a system that can answer questions like:
 2. *"Give me a summary of the positive aspects of Atlanta."*
 3. *"Which city has the highest population?"*
 
-As you can see, the questions can be simple retrieval/summarization questions over a single data source (Q1/Q2) or complex retrieval/summarization questions over multiple data sources (Q3).
+As you can see, the questions can be simple factoid/summarization questions over a single data source (Q1/Q2) or complex factoid/summarization questions over multiple data sources (Q3).
 
 We have the following *retrieval methods* at our disposal:
 
@@ -54,15 +54,15 @@ In fact, any advanced RAG pipeline can be broken down into a series of individua
 
 <!-- LLM input = **Prompt Template** + **Context** + **Question** -->
 where:
-- **Prompt Template** - A curated prompt template for the specific task (e.g. sub-question generation, summarization, etc.)
-- **Context** - The context to use to perform the task (e.g. data source, top-K most similar data chunks, etc.)
+- **Prompt Template** - A curated prompt template for the specific task (e.g., sub-question generation, summarization)
+- **Context** - The context to use to perform the task (e.g. top-K most similar data chunks)
 - **Question** - The question to answer
 
 Now, let's verify this principle by examining the inner workings of the Sub-question Query Engine.
 
 The Sub-question Query Engine has to perform three tasks:
 1. **Sub-query generation** - Given a complex question, break it down into a set of sub-questions, while identifying the appropriate data source and retrieval method for each sub-question.
-2. **Vector/Summarization Retrieval** - For each sub-query, use the chosen retrieval method over the corresponding data source to retrieve the relevant information.
+2. **Vector/Summary Retrieval** - For each sub-query, use the chosen retrieval method over the corresponding data source to retrieve the relevant information.
 3. **Response Aggregation** - Aggregate the responses from the sub-queries into a final response.
 
 Let's examine each task in detail.
@@ -150,9 +150,9 @@ For the three example questions, the LLM returns the following output:
 </table>
 </details>
 
-### Vector/Summarization Retrieval
+### Vector/Summary Retrieval
 
-For each sub-query, we use the chosen retrieval method over the corresponding data source to retrieve the relevant information. For example, for the sub-query *"What is the population of Chicago?"*, we use vector retrieval over the Chicago data source. Similarly, for the sub-query *"Give me a summary of the positive aspects of Atlanta."*, we use summarization retrieval over the Atlanta data source.
+For each sub-query, we use the chosen retrieval method over the corresponding data source to retrieve the relevant information. For example, for the sub-query *"What is the population of Chicago?"*, we use vector retrieval over the Chicago data source. Similarly, for the sub-query *"Give me a summary of the positive aspects of Atlanta."*, we use summary retrieval over the Atlanta data source.
 
 For both retrieval methods, we use the same LLM prompt template. In fact, we find that the popular **RAG Prompt** from [LangchainHub](https://smith.langchain.com/hub) works great out-of-the-box for this step.
 
@@ -166,7 +166,7 @@ Context: {context}
 Answer:
 ```
 
-Both the retrieval methods only differ in the context used for the LLM call. For vector retrieval, we use the top K most similar data chunks to the sub-query as context. For summarization retrieval, we use the entire data source as context.
+Both the retrieval methods only differ in the context used for the LLM call. For vector retrieval, we use the top K most similar data chunks to the sub-query as context. For summary retrieval, we use the entire data source as context.
 
 
 ### Response Aggregation
@@ -194,7 +194,7 @@ Now that we've demystified the inner workings of advanced RAG pipelines, let's e
 
 1. **Query sensitivity** - The biggest challenge that we observed with these systems is the query sensitivity. The LLMs are extremely sensitive to the user question, and the pipeline fails unexpectedly for several user questions. Here are a few example failure cases that we encountered:
     - **Incorrect sub-queries** - The LLM sometimes generates incorrect sub-queries. For example, *"Which city has the highest number of tech companies?"* is broken down into *"What are the tech companies in each city?"* 5 times (once for each city) instead of *"What is the number of tech companies in Toronto?"*, *"What is the number of tech companies in Chicago?"*, etc.
-    - **Incorrect retrieval method** - *"Summarize the positive aspects of Atlanta and Toronto."* results in using the vector retrieval method instead of the summarization retrieval method.
+    - **Incorrect retrieval method** - *"Summarize the positive aspects of Atlanta and Toronto."* results in using the vector retrieval method instead of the summary retrieval method.
 
 We had to put in significant effort into prompt engineering to get the pipeline to work for each question. This is a significant challenge for building robust systems.
 
@@ -222,7 +222,7 @@ To reliably generate the correct format of functions and data sources, we use th
 
 More details on the full schema definition can be found [here](subquestion_generator.py).
 
-For example, the function schema to choose vector/summarization retrieval is as simple as:
+For example, the function schema to choose vector/summary retrieval is as simple as:
 
 ```python
 class FunctionEnum(str, Enum):
