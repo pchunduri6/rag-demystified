@@ -4,7 +4,7 @@ Retrieval-Augmented Generation (RAG) pipelines powered by large language models 
 
 ## Quick start
 
-If you want to jump right in, you can run the following commands to run the application:
+If you want to jump right in, use the following commands to run the application:
 
 ```
 pip install -r requirements.txt
