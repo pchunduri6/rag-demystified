@@ -94,6 +94,10 @@ The context for the LLM call is the names of the data sources and the functions 
 
 For the three example questions, the LLM returns the following output:
 
+<details>
+  <summary>
+    LLM output Table
+  </summary>
 <table>
 <thead>
   <tr>
@@ -144,7 +148,7 @@ For the three example questions, the LLM returns the following output:
     </tr>
 </tbody>
 </table>
-
+</details>
 
 ### Vector/Summarization Retrieval
 
