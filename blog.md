@@ -29,7 +29,7 @@ In this post, we'll demystify sophisticated RAG pipelines by using the Sub-quest
 
 A data warehouse is a collection of data sources (e.g., documents, tables etc.) that contain information relevant to the question answering task.
 
-In this example, we'll use a simple data warehouse containing multiple Wikipedia articles for different popular cities, inspired by LlamaIndex [illustrative use-cases](https://docs.llamaindex.ai/en/stable/examples/index_structs/doc_summary/DocSummary.html). Each city's wiki is a separate data source. Note that for simplicity, we limit each document's size to fit within the LLM context limit.
+In this example, we'll use a simple data warehouse containing multiple Wikipedia articles for different popular cities, inspired by LlamaIndex's [illustrative use-case](https://docs.llamaindex.ai/en/stable/examples/index_structs/doc_summary/DocSummary.html). Each city's wiki is a separate data source. Note that for simplicity, we limit each document's size to fit within the LLM context limit.
 
 Our goal is to build a system that can answer questions like:
 1. *"What is the population of Chicago?"*
