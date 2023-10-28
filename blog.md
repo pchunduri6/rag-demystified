@@ -8,7 +8,7 @@ Retrieval-Augmented Generation (RAG) pipelines powered by large language models 
 Retrieval-augmented generation (RAG) is cutting-edge AI paradigm for LLM-based question answering.
 A RAG pipeline typically contains:
 
-1. **Data Warehouse** - A collection of data sources (e.g. databases, APIs, etc.) that contain information relevant to the question answering task.
+1. **Data Warehouse** - A collection of data sources (e.g., documents, tables etc.) that contain information relevant to the question answering task.
 
 2. **Vector Retrieval** - Given a question, find the top K most similar data chunks to the question. This is done using a vector store (e.g., [Faiss](https://faiss.ai/index.html)).
 
