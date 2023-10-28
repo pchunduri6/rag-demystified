@@ -19,6 +19,11 @@ from llama_index.callbacks import CallbackManager, TokenCountingHandler
 from llama_index.response_synthesizers import get_response_synthesizer
 import tiktoken
 
+api_type = ""
+api_base = ""
+api_version = ""
+api_key = ""
+
 
 embed_model_name = "hugging_face"
 
