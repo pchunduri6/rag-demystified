@@ -242,7 +242,7 @@ To verify this behavior, we [implemented the example](llama_index_baseline.py) u
 ## Conclusion
 
 Advanced RAG pipelines powered by LLMs have revolutionized question-answering systems.
-However, as we have seen, these pipelines are not turnkey solutions. Under the hood, they rely on carefully engineered prompt templates and multiple chained LLM calls. As illustrated in this application, these pipelines be question-sensitive, brittle, and opaque in their cost dynamics. Understanding these intricacies is key to leveraging their full potential and paving the way for more robust and efficient systems in the future.
+However, as we have seen, these pipelines are not turnkey solutions. Under the hood, they rely on carefully engineered prompt templates and multiple chained LLM calls. As we illustrated in this [EvaDB](https://github.com/georgia-tech-db/evadb) application, these pipelines be question-sensitive, brittle, and opaque in their cost dynamics. Understanding these intricacies is key to leveraging their full potential and paving the way for more robust and efficient systems in the future.
 
 
 <!-- ## Appendix
