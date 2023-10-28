@@ -46,7 +46,7 @@ We have the following *retrieval methods* at our disposal:
 
 ### The secret sauce
 
-Our key insight is that each component in an advanced RAG pipeline is powered by a single LLM call. The entire pipeline is a series of LLM calls with carefully crafted prompts. These prompts are the secret sauce that enable advanced RAG pipelines to perform complex tasks.
+Our key insight is that each component in an advanced RAG pipeline is powered by a single LLM call. The entire pipeline is a series of LLM calls with carefully crafted prompt templates. These prompt templates are the secret sauce that enable advanced RAG pipelines to perform complex tasks.
 
 In fact, any advanced RAG pipeline can be broken down into a series of individual LLM calls that follow a universal input pattern:
 
@@ -142,11 +142,6 @@ For the three example questions, the LLM returns the following output:
 
 ### Vector/Summarization Retrieval
 
-<!-- Once we have the sub-queries, we can use them to retrieve the relevant information from the data warehouse. Depending on the LLM's response, we use either vector retrieval or summarization retrieval.
-
-For vector retrieval, we use the EvaDB vector index to find the top K most similar data chunks to the sub-query. We then use these data chunks as context for the LLM to generate a concise response.
-For summarization retrieval, we directly use the LLM against the data source as context to generate the summary. -->
-
 For each sub-query, we use the chosen retrieval method over the corresponding data source to retrieve the relevant information. For example, for the sub-query *"What is the population of Chicago?"*, we use vector retrieval over the Chicago data source. Similarly, for the sub-query *"Give me a summary of the positive aspects of Atlanta."*, we use summarization retrieval over the Atlanta data source.
 
 For both retrieval methods, we use the same LLM prompt template. In fact, we find that the popular **RAG Prompt** from [LangchainHub](https://smith.langchain.com/hub) works great out-of-the-box for this step.
@@ -174,7 +169,8 @@ The context for the LLM call is the list of responses from the sub-queries. The 
 
 ### Putting it all together
 
-After unraveling the layers of abstraction, we uncovered the secret ingredient powering the sub-question query engine - 4 types of LLM calls with varying prompts and contexts. The table below summarizes the LLM calls used in the pipeline.
+After unraveling the layers of abstraction, we uncovered the secret ingredient powering the sub-question query engine - 4 types of LLM calls each with different prompt template, context, and a question. This fits the universal input pattern that we identified earlier perfectly, and is a far cry from the complex abstractions that we started with.
+The table below summarizes the entire pipeline.
 
 ![call_types_table](images/call_types_table.png)
 
