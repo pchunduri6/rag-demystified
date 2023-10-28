@@ -34,7 +34,7 @@ In this example, we'll use a simple data warehouse containing multiple Wikipedia
 Our goal is to build a system that can answer questions like:
 1. *"What is the population of Chicago?"*
 2. *"Give me a summary of the positive aspects of Atlanta."*
-3. *"What is the city with the highest population?"*
+3. *"Which city has the highest population?"*
 
 As you can see, the questions can be simple retrieval/summarization questions over a single data source (Q1/Q2) or complex retrieval/summarization questions over multiple data sources (Q3).
 
@@ -63,7 +63,7 @@ Now, let's verify this principle by examining the inner workings of the Sub-ques
 
 ### Sub-query Generation
 
-The goal of the sub-question query engine is to take a complex question and break it down into a set of sub-questions that can be answered by a single data source and a retrieval method. For example, the question *"What is the city with the highest population?"* is broken down into five sub-questions, one for each city, of the form *"What is the population of {city}?".*
+The goal of the sub-question query engine is to take a complex question and break it down into a set of sub-questions that can be answered by a single data source and a retrieval method. For example, the question *"Which city has the highest population?"* is broken down into five sub-questions, one for each city, of the form *"What is the population of {city}?".*
 
 At first glance, this seems like a daunting task. Specifically, we need to answer the following questions:
 1. **How do we know which sub-queries to generate?**
@@ -111,7 +111,7 @@ For the three example questions, the LLM returns the following output:
     <td>Atlanta</td>
     </tr>
     <tr>
-    <td rowspan=5>"What is the city with the highest population?"</td>
+    <td rowspan=5>"Which city has the highest population?"</td>
     <td>"What is the population of Toronto?"</td>
     <td>vector retrieval</td>
     <td>Toronto</td>
@@ -161,7 +161,7 @@ Both the retrieval methods only differ in the context used for the LLM call. For
 
 ### Response Aggregation
 
-This is the final step that aggregates the responses from the sub-queries into a final response. For example, for the question *"What is the city with the highest population?"*, the sub-queries  retrieve the population of each city and then response aggregation finds and returns the city with the highest population.
+This is the final step that aggregates the responses from the sub-queries into a final response. For example, for the question *"Which city has the highest population?"*, the sub-queries  retrieve the population of each city and then response aggregation finds and returns the city with the highest population.
 The **RAG Prompt** works great for this step as well.
 
 The context for the LLM call is the list of responses from the sub-queries. The question is the original user question and the LLM outputs a final response.
