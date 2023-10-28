@@ -211,7 +211,8 @@ To verify this behavior, we [implemented the example](llama_index_baseline.py) u
 
 ## Conclusion
 
-Advanced RAG pipelines powered by large language models hold tremendous promise for building sophisticated question answering systems. However, as we have seen, these pipelines are not turnkey solutions. Under the hood, they rely on carefully engineered prompt templates and multiple chained LLM calls. While frameworks like LlamaIndex and Haystack have made excellent progress in abstracting away this complexity through innovations like sub-question query engines, limitations remain. As illustrated in this post, these pipelines be query-sensitive, brittle, and opaque in their cost dynamics. Understanding these intricacies is key to leveraging their full potential and paving the way for more robust and efficient systems in the future.
+Advanced RAG pipelines powered by LLMs have revolutionized question-answering systems.
+However, as we have seen, these pipelines are not turnkey solutions. Under the hood, they rely on carefully engineered prompt templates and multiple chained LLM calls. As illustrated in this post, these pipelines be query-sensitive, brittle, and opaque in their cost dynamics. Understanding these intricacies is key to leveraging their full potential and paving the way for more robust and efficient systems in the future.
 
 
 <!-- Not sure if we need these details - commenting out for now
