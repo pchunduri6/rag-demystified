@@ -5,7 +5,9 @@ Retrieval-Augmented Generation (RAG) pipelines powered by large language models 
 In this [EvaDB](https://github.com/georgia-tech-db/evadb) application, we'll shed light on the inner workings of advanced RAG pipelines by examining the mechanics, limitations, and costs that often remain opaque.
 
 <p align="center">
-  <img width="70%"src="images/intro.png">
+  <img width="40%" src="images/intro.png" title="llama working on a laptop to retrieve data" >
+  <br>
+  <b><i>Llama working on a laptop</i> 🙂</b>
 </p>
 
 ## Quick start
