@@ -21,9 +21,6 @@ RAG provides two key advantages over traditional LLM-based question answering:
 
 ## Building advanced RAG Pipelines
 
-<!-- TODO: Add a diagram of a complex RAG pipeline -->
-<!-- This section should be about how complex RAG pipelines are in fashion now because of the recent advancements in LLMs and frameworks like LlamaIndex and Haystack. -->
-
 To enable answering more complex questions, recent AI frameworks like LlamaIndex have introduced more advanced abstractions such as the [Sub-question Query Engine](https://gpt-index.readthedocs.io/en/latest/examples/query_engine/sub_question_query_engine.html).
 
 In this post, we'll demystify sophisticated RAG pipelines by using the Sub-question Query Engine as an example. We'll examine the inner workings of the Sub-question Query Engine and simplify the abstractions to their core components. We'll also identify some of the challenges associated with advanced RAG pipelines.
@@ -88,11 +85,6 @@ Remarkably, the answer to all three questions is the same - a single LLM call! T
 ```
 
 The context for the LLM call is the names of the data sources and the functions available to the system. The question is the user question. The LLM outputs a list of sub-queries, each with a function and a data source.
-
-<!-- 
-To reliably generate the correct format of functions and data sources, we use the powerful [OpenAI function calling](https://openai.com/blog/function-calling-and-other-api-updates) feature paired with Pydantic models. We also use the [Instructor](https://github.com/jxnl/instructor) library to easily generate LLM-ready function schemas. -->
-
-<!-- More details on the full schema definition can be found [here](subquestion_generator.py). -->
 
 For the three example questions, the LLM returns the following output:
 
@@ -218,6 +210,11 @@ Advanced RAG pipelines are powerful tools for building end-to-end question answe
 
 
 <!-- Not sure if we need these details - commenting out for now
+
+
+To reliably generate the correct format of functions and data sources, we use the powerful [OpenAI function calling](https://openai.com/blog/function-calling-and-other-api-updates) feature paired with Pydantic models. We also use the [Instructor](https://github.com/jxnl/instructor) library to easily generate LLM-ready function schemas.
+
+More details on the full schema definition can be found [here](subquestion_generator.py).
 
 For example, the function schema to choose vector/summarization retrieval is as simple as:
 
