@@ -212,7 +212,7 @@ To see the full pipeline in action, run the following commands:
 pip install -r requirements.txt
 
 export OPENAI_API_KEY='yourkey'
-python simple_rag.py
+python complex_qa.py
 ```
 
 Here is an example of the system answering the question *"Which city with the highest population?"*.
