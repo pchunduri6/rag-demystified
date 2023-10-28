@@ -211,8 +211,7 @@ To verify this behavior, we [implemented the example](llama_index_baseline.py) u
 
 ## Conclusion
 
-Advanced RAG pipelines are powerful tools for building end-to-end question answering systems. However, they are not without their challenges. In this post, we demystified the inner workings of advanced RAG pipelines and found that most advanced RAG abstractions boil down to a few LLM prompts. We also identified some of the challenges associated with advanced RAG pipelines such as prompt sensitivity, cost, and context limits. We hope that this post will help you build more robust and cost-effective RAG pipelines.
-
+Advanced RAG pipelines powered by large language models hold tremendous promise for building sophisticated question answering systems. However, as we have seen, these pipelines are not turnkey solutions. Under the hood, they rely on carefully engineered prompt templates and multiple chained LLM calls. While frameworks like LlamaIndex and Haystack have made excellent progress in abstracting away this complexity through innovations like sub-question query engines, limitations remain. As illustrated in this post, these pipelines be query-sensitive, brittle, and opaque in their cost dynamics. Understanding these intricacies is key to leveraging their full potential and paving the way for more robust and efficient systems in the future.
 
 
 <!-- Not sure if we need these details - commenting out for now
