@@ -1,6 +1,18 @@
+import sys
+import logging
+
 import openai
 import tiktoken
 
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+    after_log,
+)  # for exponential backoff
+
+logging.basicConfig(stream=sys.stderr, level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 OPENAI_PRICING = {
     'gpt-35-turbo': {'prompt': 0.0015, 'completion': 0.002},
@@ -17,6 +29,15 @@ OPENAI_MODEL_CONTEXT_LENGTH = {
     'gpt-4-0613': 8192,
     'gpt-4-32k': 32768
     }
+
+
+@retry(
+    wait=wait_random_exponential(min=1, max=60),
+    stop=stop_after_attempt(20),
+    after=after_log(logger, logging.INFO),
+)
+def completion_with_backoff(**kwargs):
+    return openai.ChatCompletion.create(**kwargs)
 
 
 def llm_call_cost(response):
@@ -42,7 +63,7 @@ def llm_call(model,
     if output_schema is not None:
         kwargs["function_call"] = output_schema
 
-    response = openai.ChatCompletion.create(
+    response = completion_with_backoff(
         model=model,
         temperature=0,
         messages=[
@@ -53,6 +74,7 @@ def llm_call(model,
         ],
         **kwargs
     )
+
     # print cost of call
     call_cost = llm_call_cost(response)
     print(f"🤑 LLM call cost: ${call_cost:.4f}")
