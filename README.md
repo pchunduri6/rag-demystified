@@ -17,7 +17,7 @@ If you want to jump right in, use the following commands to run the application:
 ```
 pip install -r requirements.txt
 
-export OPENAI_API_KEY='yourkey'
+echo OPENAI_API_KEY='yourkey' > .env
 python complex_qa.py
 ```
 
@@ -211,7 +211,7 @@ To see the full pipeline in action, run the following commands:
 ```
 pip install -r requirements.txt
 
-export OPENAI_API_KEY='yourkey'
+echo OPENAI_API_KEY='yourkey' > .env
 python complex_qa.py
 ```
 
