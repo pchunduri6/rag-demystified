@@ -64,7 +64,7 @@ def vector_retrieval(cursor, llm_model, question, doc_name):
 
     response, cost = llm_call(model=llm_model, user_prompt=user_prompt)
 
-    answer = response["choices"][0]["message"]["content"]
+    answer = response.choices[0].message.content
     return answer, cost
 
 
@@ -78,7 +78,7 @@ def summary_retrieval(llm_model, question, doc):
                 Here is the question: {question}"""
 
     response, cost = llm_call(model=llm_model, user_prompt=user_prompt)
-    answer = response["choices"][0]["message"]["content"]
+    answer = response.choices[0].message.content
     return answer, cost
     # load max of context_length tokens from the document
 
@@ -101,7 +101,7 @@ def response_aggregator(llm_model, question, responses):
                       Answer:"""
 
     response, cost = llm_call(model=llm_model, system_prompt=system_prompt, user_prompt=user_prompt)
-    answer = response["choices"][0]["message"]["content"]
+    answer = response.choices[0].message.content
     return answer, cost
 
 
@@ -165,7 +165,7 @@ if __name__ == "__main__":
             break
         print("🧠 Generating subquestions...")
         subquestions_bundle_list, cost = generate_subquestions(question=question,
-                                                               data_sources=doc_names,
+                                                               file_names=doc_names,
                                                                user_task=user_task,
                                                                llm_model=llm_model)
         question_cost += cost
@@ -173,7 +173,7 @@ if __name__ == "__main__":
         for q_no, item in enumerate(subquestions_bundle_list):
             subquestion = item.question
             selected_func = item.function.value
-            selected_doc = item.data_source.value
+            selected_doc = item.file_name.value
             print(f"\n-------> 🤔 Processing subquestion #{q_no+1}: {subquestion} | function: {selected_func} | data source: {selected_doc}")
             if selected_func == "vector_retrieval":
                 response, cost = vector_retrieval(cursor, llm_model, subquestion, selected_doc)
