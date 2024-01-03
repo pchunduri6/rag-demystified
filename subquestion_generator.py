@@ -50,9 +50,9 @@ def generate_subquestions(
     llm_model="gpt-4-0613",
 ):
     """Generates a list of subquestions from a user question along with the
-    data source and the function to use to answer the question using OpenAI LLM.
+    file name and the function to use to answer the question using OpenAI LLM.
     """
-    FilenameEnum = Enum("DataSourceEnum", {x.upper(): x for x in file_names})
+    FilenameEnum = Enum("FilenameEnum", {x.upper(): x for x in file_names})
     FilenameEnum.__doc__ = f"The names of the file to use to answer the corresponding subquestion - e.g. {file_names[0]}"
 
     # Create pydantic class dynamically
