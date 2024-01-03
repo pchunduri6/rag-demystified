@@ -1,5 +1,5 @@
 evadb[document]
-openai
+openai>=1.0
 instructor
 pydantic==2.4.0
 python-dotenv==1.0.0
